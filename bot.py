@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 from dotenv import load_dotenv
-import os, sys, json, glob, textwrap, argparse, mimetypes, pprint
+import os, sys, json, glob, textwrap, argparse, mimetypes, pprint, random, time
 
 from requests_oauthlib import OAuth1Session
 
@@ -14,7 +14,11 @@ argparser = argparse.ArgumentParser(
 	description="Twitter bot script", 
 	epilog=("%s\nsee more detail at https://github.com/kaz-yamam0t0/tw-bot" % HR),
 )
-argparser.add_argument("-d","--image-dir", help="path to image directory", default="assets/images/")
+argparser.add_argument("--text", help="Text posted as a tweet.", default="")
+argparser.add_argument("--image-dir", help="Use image files randomly selected in this directory", default="assets/images/")
+argparser.add_argument("--image", help="Use the specified image file and --image-dir will be ignored.", default="")
+argparser.add_argument("--forever", help="Make this script run forever", action="store_true")
+argparser.add_argument("--duration", help="Interval seconds between posts (minimum is 3600), used only when --forever is specified.", default=1, type=int)
 args = argparser.parse_args()
 
 # global vars
@@ -123,15 +127,24 @@ def api_upload(p):
 # main ====================
 if __name__ == '__main__':
 	# find image
-	if not args.image_dir:
-		die("--image-dir is empty.")
+	if not args.image and not args.image_dir:
+		die("Either --image or --image-dir is required.")
 
-	# image_dir = os.path.join(os.getcwd(), args.image_dir)
-	image_dir = os.path.abspath(args.image_dir)
-	if not image_dir or not os.path.isdir(image_dir):
-		die("%s is not a directory" % image_dir)
+	images = None
+	image = args.image
+	image_dir = args.image_dir
+	
+	if image:
+		image = os.path.abspath(image)
+		if not os.path.isfile(image):
+			die("%s is not a file" % image)
+		images = [image, ]
+	elif image_dir:
+		image_dir = os.path.abspath(image_dir)
+		if not os.path.isdir(image_dir):
+			die("%s is not a directory" % image_dir)
 
-	files = [p for p in glob.glob(image_dir+"/**", recursive=True) \
+		images = [p for p in glob.glob(image_dir+"/**", recursive=True) \
 						if os.path.isfile(p) and (
 							p[-4:] == ".png" or 
 							p[-5:] == ".jpeg" or 
@@ -139,8 +152,8 @@ if __name__ == '__main__':
 							p[-4:] == ".gif"
 						)  ]
 
-	if len(files) <= 0:
-		die("no image found in %s" % image_dir)
+	if len(images) <= 0:
+		die("no image found")
 
 	# load .env
 	load_dotenv()
@@ -160,6 +173,8 @@ if __name__ == '__main__':
 	# debug(args)
 
 	# get my own id
+	# not necessary if what you want to do is just to post tweets
+	"""
 	me = api_get("/2/users/me")
 	if not me or not me.get("data") or not me.get("data").get("id"):
 		raise Exception("failed to get my own data")
@@ -168,19 +183,30 @@ if __name__ == '__main__':
 	my_id = me.get("id")
 
 	out("my id: %s" % my_id)
+	"""
 
-	# upload 
-	f = files.pop()
-	media_id = api_upload(f)
-	# debug(media_id)
+	def upload():
+		global images, args
 
-	# tweets
-	# Reference: https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
-	res = api_post("/2/tweets", jsondata={ 
-		"text" : "test",
-		"media" : {
-			"media_ids" : [ media_id, ] ,
-		},
-	})
-	out(pprint.pformat(res))
+		f = images[ random.randrange(len(images)) ]
+		media_id = api_upload(f)
+		# debug(media_id)
+
+		# tweets
+		# Reference: https://developer.twitter.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
+		res = api_post("/2/tweets", jsondata={ 
+			"text" : args.text,
+			"media" : {
+				"media_ids" : [ media_id, ] ,
+			},
+		})
+		out(pprint.pformat(res))
+
+	if args.forever:
+		d = max(3600, args.duration)
+		while True:
+			upload()
+			time.sleep(d)
+	else:
+		upload()
 	# time.sleep(60 * 10)
