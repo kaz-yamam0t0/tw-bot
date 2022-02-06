@@ -17,8 +17,8 @@ argparser = argparse.ArgumentParser(
 argparser.add_argument("--text", help="Text posted as a tweet.", default="")
 argparser.add_argument("--image-dir", help="Use image files randomly selected in this directory", default="assets/images/")
 argparser.add_argument("--image", help="Use the specified image file and --image-dir will be ignored.", default="")
-argparser.add_argument("--forever", help="Make this script run forever", action="store_true")
-argparser.add_argument("--duration", help="Interval seconds between posts (minimum is 3600), used only when --forever is specified.", default=1, type=int)
+# argparser.add_argument("--forever", help="Make this script run forever", action="store_true")
+# argparser.add_argument("--duration", help="Interval seconds between posts (minimum is 3600), used only when --forever is specified.", default=1, type=int)
 args = argparser.parse_args()
 
 # global vars
@@ -202,11 +202,15 @@ if __name__ == '__main__':
 		})
 		out(pprint.pformat(res))
 
-	if args.forever:
-		d = max(3600, args.duration)
-		while True:
-			upload()
-			time.sleep(d)
-	else:
-		upload()
+	# use crontab instead of --forever
+	# 
+	# if args.forever:
+	# 	d = max(3600, args.duration)
+	# 	while True:
+	# 		upload()
+	# 		time.sleep(d)
+	# else:
+	# 	upload()
+	upload()
+
 	# time.sleep(60 * 10)
