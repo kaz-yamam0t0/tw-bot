@@ -42,7 +42,7 @@ $ python bot.py --text="Generated with #DeepLearning #MachineLearning #StyleGAN 
     --image-dir /path/to/images/
 ```
 
-### Thanks
+### Thanks To:
 
 - [StyleGAN](https://github.com/NVlabs/stylegan)
 - [StyleGAN2](https://github.com/NVlabs/stylegan2)
