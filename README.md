@@ -41,3 +41,9 @@ optional arguments:
 $ python bot.py --text="Generated with #DeepLearning #MachineLearning #StyleGAN #AI" \
     --image-dir /path/to/images/
 ```
+
+### Thanks
+
+- [StyleGAN](https://github.com/NVlabs/stylegan)
+- [StyleGAN2](https://github.com/NVlabs/stylegan2)
+- [Making Anime Faces With StyleGAN](https://www.gwern.net/Faces)
